@@ -197,6 +197,7 @@ fn main() {
         Commands::Halo2MockProver { file, dir } => {
             halo2::mock_prove(Path::new(&file), Path::new(&dir));
         }
+        /*
         Commands::Stark {
             file,
             degree,
@@ -210,5 +211,6 @@ fn main() {
                 &output_directory,
             );
         }
+        */
     }
 }
