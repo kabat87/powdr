@@ -244,7 +244,7 @@ where
                 "{next_row} of {} rows ({} %, {} rows per second)",
                 self.fixed_data.degree,
                 next_row * 100 / self.fixed_data.degree,
-                1000000 / duration.as_millis()
+                1000000000 / duration.as_micros()
             );
             self.last_report = next_row;
         }
