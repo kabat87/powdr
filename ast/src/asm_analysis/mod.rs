@@ -80,9 +80,18 @@ impl<T> From<DebugDirective> for FunctionStatement<T> {
 #[derive(Clone, Debug)]
 pub struct AssignmentStatement<T> {
     pub start: usize,
-    pub lhs: Vec<String>,
-    pub using_reg: Option<String>,
+    pub lhs_with_reg: Vec<(String, Option<String>)>,
     pub rhs: Box<Expression<T>>,
+}
+
+impl<T> AssignmentStatement<T> {
+    fn lhs(&self) -> impl Iterator<Item = &String> {
+        self.lhs_with_reg.iter().map(|(lhs, _)| lhs)
+    }
+
+    fn assignment_registers(&self) -> impl Iterator<Item = &Option<String>> {
+        self.lhs_with_reg.iter().map(|(_, reg)| reg)
+    }
 }
 
 #[derive(Clone, Debug)]

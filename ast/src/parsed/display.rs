@@ -112,7 +112,14 @@ impl<T: Display> Display for FunctionStatement<T> {
                 write_regs.join(", "),
                 assignment_reg
                     .as_ref()
-                    .map(ToString::to_string)
+                    .map(|s| s
+                        .iter()
+                        .map(|s| s
+                            .as_ref()
+                            .map(|s| s.to_string())
+                            .unwrap_or_else(|| "_".to_string()))
+                        .collect::<Vec<_>>()
+                        .join(", "))
                     .unwrap_or_default(),
                 expression
             ),

@@ -75,7 +75,7 @@ pub enum InstructionBody<T> {
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum FunctionStatement<T> {
-    Assignment(usize, Vec<String>, Option<String>, Box<Expression<T>>),
+    Assignment(usize, Vec<String>, Option<Vec<Option<String>>>, Box<Expression<T>>),
     Instruction(usize, String, Vec<Expression<T>>),
     Label(usize, String),
     DebugDirective(usize, DebugDirective),

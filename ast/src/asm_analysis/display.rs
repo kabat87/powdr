@@ -97,11 +97,14 @@ impl<T: Display> Display for AssignmentStatement<T> {
         write!(
             f,
             "{} <={}= {};",
-            self.lhs.join(", "),
-            self.using_reg
-                .as_ref()
-                .map(ToString::to_string)
-                .unwrap_or_default(),
+            self.lhs()
+                .map(|s| s.to_string())
+                .collect::<Vec<_>>()
+                .join(", "),
+            self.assignment_registers()
+                .map(|s| s.as_ref().map(|s| s.to_string()).unwrap_or_else(|| "_".to_string()))
+                .collect::<Vec<_>>()
+                .join(", "),
             self.rhs
         )
     }

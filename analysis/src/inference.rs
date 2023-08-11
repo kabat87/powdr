@@ -32,47 +32,54 @@ fn infer_machine<T: FieldElement>(mut machine: Machine<T>) -> Result<Machine<T>,
     for f in machine.functions.iter_mut() {
         for s in f.body.statements.iter_mut() {
             if let FunctionStatement::Assignment(a) = s {
-                let expr_reg = match &*a.rhs {
+                let expr_regs = match &*a.rhs {
                     Expression::FunctionCall(c) => {
                         let instr = machine
                             .instructions
                             .iter()
                             .find(|i| i.name == c.id)
                             .unwrap();
-                        let output = {
-                            let outputs = instr.params.outputs.as_ref().unwrap();
-                            assert!(outputs.params.len() == 1);
-                            &outputs.params[0]
-                        };
-                        assert!(output.ty.is_none());
-                        Some(output.name.clone())
+                        let outputs = instr.params.outputs.clone().unwrap_or_default();
+
+                        outputs
+                            .params
+                            .iter()
+                            .map(|o| {
+                                assert!(o.ty.is_none());
+                                Some(o.name.clone())
+                            })
+                            .collect::<Vec<_>>()
                     }
-                    _ => None,
+                    _ => vec![None; a.lhs_with_reg.len()],
                 };
 
-                match (&mut a.using_reg, expr_reg) {
-                    (Some(using_reg), Some(expr_reg)) if *using_reg != expr_reg => {
-                        errors.push(format!("Assignment register `{}` is incompatible with `{}`. Try replacing `<={}=` by `<==`.", using_reg, a.rhs, using_reg));
-                    }
-                    (Some(_), _) => {}
-                    (None, Some(expr_reg)) => {
-                        // infer the assignment register to that of the rhs
-                        a.using_reg = Some(expr_reg);
-                    }
-                    (None, None) => {
-                        let hint = AssignmentStatement {
-                            using_reg: Some(
-                                machine
-                                    .registers
-                                    .iter()
-                                    .find(|r| r.flag == Some(RegisterFlag::IsAssignment))
-                                    .unwrap()
-                                    .name
-                                    .clone(),
-                            ),
-                            ..a.clone()
-                        };
-                        errors.push(format!("Impossible to infer the assignment register for `{a}`. Try using an assignment register like `{hint}`."));
+                assert_eq!(expr_regs.len(), a.lhs_with_reg.len());
+
+                for ((_, reg), expr_reg) in a.lhs_with_reg.iter_mut().zip(expr_regs) {
+                    match (reg.as_mut(), expr_reg) {
+                        (Some(using_reg), Some(expr_reg)) if *using_reg != expr_reg => {
+                            errors.push(format!("Assignment register `{}` is incompatible with `{}`. Try replacing `<={}=` by `<==`.", using_reg, a.rhs, using_reg));
+                        }
+                        (Some(_), _) => {}
+                        (None, Some(expr_reg)) => {
+                            // infer the assignment register to that of the rhs
+                            *reg = Some(expr_reg);
+                        }
+                        (None, None) => {
+                            // let hint = AssignmentStatement {
+                            //     lhs_with_reg: Some(
+                            //         machine
+                            //             .registers
+                            //             .iter()
+                            //             .find(|r| r.flag == Some(RegisterFlag::IsAssignment))
+                            //             .unwrap()
+                            //             .name
+                            //             .clone(),
+                            //     ),
+                            //     ..a.clone()
+                            // };
+                            errors.push(format!("Try ChatGPT."));
+                        }
                     }
                 }
             }
@@ -114,7 +121,7 @@ mod tests {
 
         let file = infer_str::<Bn254Field>(file).unwrap();
 
-        if let FunctionStatement::Assignment(AssignmentStatement { using_reg, .. }) =
+        if let FunctionStatement::Assignment(AssignmentStatement { lhs_with_reg, .. }) =
             &file.machines["Machine"].functions[0].body.statements[0]
         {
             assert_eq!(*using_reg, Some("X".to_string()));

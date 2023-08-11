@@ -261,8 +261,19 @@ IdentifierList: Vec<String> = {
     => vec![]
 }
 
-AssignOperator: Option<String> = {
-    "<=" <Identifier?> "="
+AssignOperator: Option<Vec<Option<String>>> = {
+    "<==" => None,
+    "<=" <OptionalIdentifierList> "=" => Some(<>)
+}
+
+OptionalIdentifierList: Vec<Option<String>> = {
+    <mut list:( <OptionalIdentifier> "," )*> <end:OptionalIdentifier>  => { list.push(end); list },
+    => vec![]
+}
+
+OptionalIdentifier: Option<String> = {
+    <Identifier> => Some(<>),
+    "_" => None,
 }
 
 Instruction: FunctionStatement<T> = {

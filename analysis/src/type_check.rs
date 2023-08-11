@@ -84,13 +84,26 @@ impl<T: FieldElement> TypeChecker<T> {
                     let mut body = vec![];
                     let id = function_id.map(|id| id.id);
                     for s in statements {
+                        let statement_string = s.to_string();
                         match s {
                             FunctionStatement::Assignment(start, lhs, using_reg, rhs) => {
+                                if let Some(using_reg) = &using_reg {
+                                    if using_reg.len() != lhs.len() {
+                                        errors.push(format!(
+                                            "Mismatched number of registers for assignment {}",
+                                            statement_string
+                                        ));
+                                    }
+                                }
+                                let using_reg = using_reg.unwrap_or_else(|| vec![None; lhs.len()]);
+                                let lhs_with_reg = lhs
+                                    .into_iter()
+                                    .zip(using_reg.into_iter())
+                                    .collect::<Vec<_>>();
                                 body.push(
                                     AssignmentStatement {
                                         start,
-                                        lhs,
-                                        using_reg,
+                                        lhs_with_reg,
                                         rhs,
                                     }
                                     .into(),

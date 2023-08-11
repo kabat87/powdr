@@ -285,15 +285,21 @@ impl<'a, T: FieldElement> ASMPILConverter<'a, T> {
         Some(match statement {
             FunctionStatement::Assignment(AssignmentStatement {
                 start,
-                lhs,
-                using_reg,
+                lhs_with_reg,
                 rhs,
-            }) => match *rhs {
-                Expression::FunctionCall(c) => {
-                    self.handle_functional_instruction(lhs, using_reg.unwrap(), c.id, c.arguments)
+            }) => {
+                let lhs_with_reg = lhs_with_reg
+                    .into_iter()
+                    .map(|(lhs, reg)| (lhs, reg.unwrap()))
+                    .collect();
+
+                match *rhs {
+                    Expression::FunctionCall(c) => {
+                        self.handle_functional_instruction(lhs_with_reg, c.id, c.arguments)
+                    }
+                    _ => self.handle_assignment(start, lhs_with_reg, *rhs),
                 }
-                _ => self.handle_assignment(start, lhs, using_reg, *rhs),
-            },
+            }
             FunctionStatement::Instruction(InstructionStatement {
                 instruction,
                 inputs,
@@ -539,19 +545,14 @@ impl<'a, T: FieldElement> ASMPILConverter<'a, T> {
     fn handle_assignment(
         &mut self,
         _start: usize,
-        write_regs: Vec<String>,
-        assign_reg: Option<String>,
+        lhs_with_reg: Vec<(String, String)>,
         value: Expression<T>,
     ) -> CodeLine<T> {
-        assert!(write_regs.len() <= 1);
-        assert!(
-            assign_reg.is_some(),
-            "Implicit assign register not yet supported."
-        );
-        let assign_reg = assign_reg.unwrap();
+        assert!(lhs_with_reg.len() == 1);
+        let (write_regs, assign_reg) = lhs_with_reg.into_iter().next().unwrap();
         let value = self.process_assignment_value(value);
         CodeLine {
-            write_regs: [(assign_reg.clone(), write_regs)].into_iter().collect(),
+            write_regs: [(assign_reg.clone(), vec![write_regs])].into_iter().collect(),
             value: [(assign_reg, value)].into(),
             ..Default::default()
         }
@@ -559,25 +560,24 @@ impl<'a, T: FieldElement> ASMPILConverter<'a, T> {
 
     fn handle_functional_instruction(
         &mut self,
-        write_regs: Vec<String>,
-        assign_reg: String,
+        lhs_with_regs: Vec<(String, String)>,
         instr_name: String,
-        args: Vec<Expression<T>>,
+        mut args: Vec<Expression<T>>,
     ) -> CodeLine<T> {
-        assert!(write_regs.len() == 1);
         let instr = &self
             .instructions
             .get(&instr_name)
             .unwrap_or_else(|| panic!("Instruction not found: {instr_name}"));
-        assert_eq!(instr.outputs.len(), 1);
-        let output = instr.outputs[0].clone();
-        assert!(
-            output == assign_reg,
-            "The instruction {instr_name} uses the assignment register {output}, but the caller uses {assign_reg} to further process the value.",
-        );
+        let output = instr.outputs.clone();
 
-        let mut args = args;
-        args.push(direct_reference(write_regs.first().unwrap().clone()));
+        for (o, (_, r)) in output.iter().zip(lhs_with_regs.iter()) {
+            assert!(
+                o == r,
+                "The instruction {instr_name} uses the output register {o}, but the caller uses {r} to further process the value.",
+            );
+        }
+
+        args.extend(lhs_with_regs.iter().map(|(lhs, _)| direct_reference(lhs)));
         self.handle_instruction(instr_name, args)
     }
 
