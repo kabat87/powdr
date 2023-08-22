@@ -78,6 +78,7 @@ fn vm_to_block_unique_interface() {
     gen_halo2_proof(f, slice_to_vec(&i));
 }
 
+#[test]
 fn vm_to_block_to_block() {
     let f = "vm_to_block_to_block.asm";
     let i = [];

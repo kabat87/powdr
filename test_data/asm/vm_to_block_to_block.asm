@@ -1,11 +1,11 @@
-machine Inc(latch, function_id) {
+machine Inc(latch, operation_id) {
 
     degree 8;
 
-    function inc<0> x -> y {
-    }
+    operation inc<0> x -> y;
 
     constraints {
+        col witness operation_id;
         col fixed latch = [1]*;
         col witness x;
         col witness y;
@@ -13,23 +13,23 @@ machine Inc(latch, function_id) {
     }
 }
 
-machine Assert1(latch, function_id) {
+machine Assert1(latch, operation_id) {
 
     degree 8;
 
     Inc inc;
 
-    function assert1<0> x {
-    }
+    operation assert1<0> x ->;
+
+    // Increment x by calling into inc machine
+    link 1 x -> y = inc.inc;
 
     constraints {
+        col witness operation_id;
         col fixed latch = [1]*;
         col witness x;
         col witness y;
 
-        // Increment x by calling into inc machine
-        {x, y} in main_assert1_inc.latch {main_assert1_inc.x, main_assert1_inc.y};
-        // Assert that result is 2
         y = 2;
     }
 }
