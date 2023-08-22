@@ -1,4 +1,19 @@
 //! The main powdr lib, used to compile from assembly to PIL
+//! - [ast]: Data structures for the various stages of the pipeline:
+//!   - `ast::parsed`: The parse tree
+//!   - `ast::asm_analysis`: Type-checked ASM
+//!   - `ast::object`: PIL
+//!   - `ast::analyzed`: Types used during witness generation
+//! - [parser]: Parsing source files into `ast::parsed` data structures
+//! - [analysis]: Type checking, convert from `ast::parsed` to `ast::asm_analysis`
+//! - [asm_to_pil]: Translate from ASM to PIL, convert from `ast::asm_analysis` to `ast::object`
+//! - [airgen]: Generate AIR, convert from `ast::asm_analysis` to `ast::object`
+//! - [linker]: Link different PILs by concatenating and adding lookups, convert from `ast::object` to `ast::parsed`
+//! - [pil_analyzer]: Analyze PIL, convert from `ast::parsed` to `ast::analyzed`
+//! - [pilopt]: Optimize PIL (`pil::analyzed`)
+//! - [executor]: Witness Generation
+//! - [backend]: Backend implementations (PILCOM and `halo2`)
+//! - [number]: Field implementations
 
 use std::ffi::OsStr;
 use std::fs;
@@ -19,6 +34,7 @@ use number::write_polys_file;
 use number::DegreeType;
 pub use verify::{verify, verify_asm_string};
 
+use ast::object;
 use ast::parsed::PILFile;
 use executor::constant_evaluator;
 use number::FieldElement;
