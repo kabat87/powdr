@@ -10,11 +10,16 @@ use super::{
     EvalResult, EvalValue, FixedData, IncompleteCause,
 };
 
+/// A list of mutable references to machines.
 pub struct Machines<'a, 'b, T: FieldElement> {
     machines: Vec<&'b mut KnownMachine<'a, T>>,
 }
 
 impl<'a, 'b, T: FieldElement> Machines<'a, 'b, T> {
+    /// Returns a mutable reference to machine i and a vector of all other machines.
+    /// The returned references will be reborrows of the original references, with a shorter lifetimes.
+    /// With #515 implemented, this could be removed as there would not be a need to split the
+    /// list of machines.
     pub fn split<'c>(
         &'c mut self,
         i: usize,
