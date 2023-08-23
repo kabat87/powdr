@@ -318,9 +318,7 @@ impl<'a, T: FieldElement> BlockMachine<'a, T> {
 
             let result = identity_processor.process_link(left, right, &row_pair)?;
 
-            // If there are any updates, they have to be in the current machine, which means we'll
-            // actually want to run it.
-            if result.is_complete() && result.constraints.is_empty() {
+            if result.is_complete() {
                 return Ok(result);
             }
         }
