@@ -2,10 +2,6 @@ use std::collections::BTreeMap;
 
 use crate::ast::{Argument, Expression, FunctionOpKind, Register};
 
-pub trait Compiler {
-    fn compile(assemblies: BTreeMap<String, String>) -> String;
-}
-
 pub fn next_multiple_of_four(x: usize) -> usize {
     ((x + 3) / 4) * 4
 }

@@ -2,7 +2,6 @@
 use std::{collections::BTreeMap, path::Path, process::Command};
 
 use ::compiler::{compile_asm_string, BackendType};
-use asm_utils::compiler::Compiler;
 use mktemp::Temp;
 use std::fs;
 use walkdir::WalkDir;
@@ -89,7 +88,7 @@ pub fn compile_riscv_asm_bundle<T: FieldElement>(
         return Ok(());
     }
 
-    let powdr_asm = compiler::Risc::compile(riscv_asm_files);
+    let powdr_asm = compiler::compile(riscv_asm_files);
 
     fs::write(powdr_asm_file_name.clone(), &powdr_asm).unwrap();
     log::info!("Wrote {}", powdr_asm_file_name.to_str().unwrap());

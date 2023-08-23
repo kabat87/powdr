@@ -1,5 +1,5 @@
 mod instruction_tests {
-    use asm_utils::compiler::Compiler;
+    use asm_utils::utils::Compiler;
     use compiler::verify_asm_string;
     use number::GoldilocksField;
     use riscv::compiler::Risc;
