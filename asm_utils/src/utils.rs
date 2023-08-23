@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 use crate::ast::{Argument, Expression, FunctionOpKind, Register};
 
 pub fn next_multiple_of_four(x: usize) -> usize {
