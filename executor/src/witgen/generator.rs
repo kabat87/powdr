@@ -395,8 +395,7 @@ where
             .map(|(poly_id, col)| (col.name.as_str(), poly_id))
             .collect::<BTreeMap<_, _>>();
         for i in 0..self.identity_processor.machines.len() {
-            let (current, others) =
-                IdentityProcessor::split_machines(&mut self.identity_processor.machines, i);
+            let (current, others) = self.identity_processor.machines.split(i);
             for (col_name, col) in current.take_witness_col_values(
                 self.fixed_data,
                 self.identity_processor.fixed_lookup,
