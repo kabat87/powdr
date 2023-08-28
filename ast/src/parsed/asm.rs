@@ -1,6 +1,6 @@
 use number::AbstractNumberType;
 
-use super::{Expression, PilStatement, SelectedExpressions};
+use super::{Expression, PilStatement};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ASMFile<T> {
@@ -75,7 +75,7 @@ pub enum MachineStatement<T> {
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum InstructionBody<T> {
-    Local(Vec<InstructionBodyElement<T>>),
+    Local(Vec<PilStatement<T>>),
     External(String, String),
 }
 
@@ -105,17 +105,6 @@ pub enum RegisterFlag {
 pub struct Param {
     pub name: String,
     pub ty: Option<String>,
-}
-
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub enum InstructionBodyElement<T> {
-    PolynomialIdentity(Expression<T>, Expression<T>),
-    PlookupIdentity(
-        SelectedExpressions<T>,
-        PlookupOperator,
-        SelectedExpressions<T>,
-    ),
-    FunctionCall(FunctionCall<T>),
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]

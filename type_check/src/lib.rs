@@ -7,7 +7,7 @@ use ast::{
         InstructionDefinitionStatement, InstructionStatement, LabelStatement, Machine, PilBlock,
         RegisterDeclarationStatement, RegisterTy, Return, SubmachineDeclaration,
     },
-    parsed::asm::{ASMFile, FunctionStatement, MachineStatement, RegisterFlag},
+    parsed::asm::{ASMFile, FunctionStatement, InstructionBody, MachineStatement, RegisterFlag},
 };
 use number::FieldElement;
 
@@ -67,6 +67,7 @@ impl<T: FieldElement> TypeChecker<T> {
                     if name == "return" {
                         errors.push("Instruction cannot use reserved name `return`".into());
                     }
+                    errors.extend(self.check_instruction_body(&instruction.body));
                     instructions.push(InstructionDefinitionStatement {
                         start,
                         name,
@@ -244,6 +245,25 @@ impl<T: FieldElement> TypeChecker<T> {
                 .map(|(name, machine)| (name, machine.unwrap()))
                 .collect();
             Ok(AnalysisASMFile { machines })
+        }
+    }
+
+    fn check_instruction_body(&mut self, body: &InstructionBody<T>) -> Vec<String> {
+        if let InstructionBody::Local(statements) = body {
+            statements
+                .iter()
+                .filter_map(|s| match s {
+                    ast::parsed::PilStatement::PolynomialIdentity(_, _) => None,
+                    ast::parsed::PilStatement::PermutationIdentity(_, l, _)
+                    | ast::parsed::PilStatement::PlookupIdentity(_, l, _) => l
+                        .selector
+                        .is_some()
+                        .then_some(format!("LHS selector not yet supported in {s}.")),
+                    _ => Some(format!("Statement not allowed in instruction body: {s}")),
+                })
+                .collect()
+        } else {
+            vec![]
         }
     }
 }
